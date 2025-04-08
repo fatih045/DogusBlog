@@ -5,11 +5,19 @@ namespace DogusBlog.Repositories
 {
     public class BlogRepository : GenericRepository<Blog>, IBlogRepository
     {
-        private readonly ApplicationDbContext _context;
+      
 
         public BlogRepository(ApplicationDbContext context) : base(context)
         {
-            _context = context;
+           
+        }
+
+        public override async Task<IEnumerable<Blog>> GetAllAsync()
+        {
+            return await _context.Blogs
+                .Include(b => b.Category) // Kategoriyi include et
+                .Include(b => b.User)     // Kullanıcıyı include et
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Blog>> GetAllWithCategoryAsync()

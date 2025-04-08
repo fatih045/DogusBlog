@@ -1,4 +1,6 @@
 ﻿using DogusBlog.Models;
+using DogusBlog.Models.Dto;
+using DogusBlog.Models.Dto.DogusBlog.Models.Dto;
 using DogusBlog.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,18 +21,49 @@ namespace DogusBlog.Controllers
         public async Task<IActionResult> Index()
         {
             var blogs = await _blogService.GetAllAsync();
-            return View(blogs);
+
+            var blogDtos = blogs.Select(b => new BlogDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Content = b.Content,
+                PublishDate = b.PublishDate,
+                ImagePath = b.ImagePath,
+                CategoryName = b.Category?.Name ?? "Kategorisiz",
+                UserName = b.User?.Username ?? "Anonim",
+              
+                Tags = b.BlogTags?.Select(bt => bt.Tag?.Name).Where(t => t != null).ToList() ?? new List<string>()
+            }).ToList();
+
+            return View(blogDtos);
         }
 
-        // GET: /Blog/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            var blog = await _blogService.GetByIdAsync(id);
+            var blog = await _blogService.GetBlogWithDetailsAsync(id);
             if (blog == null)
                 return NotFound();
 
-            return View(blog);
+            var dto = new BlogDetailDto
+            {
+                Title = blog.Title,
+                Content = blog.Content,
+                PublishDate = blog.PublishDate,
+                CategoryName = blog.Category?.Name ?? "Kategorisiz",
+                UserName = blog.User?.Username ?? "Anonim",
+                Comments = blog.Comments?.Select(c => new CommentDto
+                {
+                    Id = c.Id,  // Id'yi ekledik
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    UserName = c.User?.Username ?? "Anonim"
+                }).ToList() ?? new List<CommentDto>()
+            };
+
+            return View(dto);
         }
+
+
 
         // GET: /Blog/Create
         public async Task<IActionResult> Create()

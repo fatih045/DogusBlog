@@ -1,8 +1,43 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Ana Sayfa";
 }
+@model IEnumerable<DogusBlog.Models.Dto.BlogDto>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+ <h2 class="mb-4">Tüm Bloglar</h2>
+
+
+
+  @if (Model == null || !Model.Any())
+    {
+        <p>No blogs available.</p>
+    }
+else
+
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var blog in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@blog.Title</h5>
+                        <p class="card-text text-muted small">
+                            Yayın Tarihi: @blog.PublishDate.ToString("dd MMM yyyy")
+                        </p>
+                        <p class="card-text">
+                            @(blog.Content.Length > 100 ? blog.Content.Substring(0, 100) + "..." : blog.Content)
+                        </p>
+                            <a href="@Url.Action("Details", "Blog", new { id = blog.Id })" class="btn btn-primary btn-sm">Detay</a>
+
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Kategori: @blog.CategoryName <br />
+                        Yazar: @blog.UserName
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
 </div>

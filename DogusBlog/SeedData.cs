@@ -1,4 +1,5 @@
 ﻿using DogusBlog.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DogusBlog
@@ -10,60 +11,64 @@ namespace DogusBlog
             using var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>());
 
-            if (context.Categories.Any()) return; 
+            if (context.Categories.Any()) return;
 
             // Kategoriler
             var categories = new List<Category>
-        {
-            new() { Id = 1, Name = "Yazılım" },
-            new() { Id = 2, Name = "Kitap" },
-            new() { Id = 3, Name = "Film" }
-        };
+            {
+                new() { Name = "Yazılım" },
+                new() { Name = "Kitap" },
+                new() { Name = "Film" }
+            };
             context.Categories.AddRange(categories);
+            context.SaveChanges();
 
             // Tag'ler
             var tags = new List<Tag>
-        {
-            new() { Id = 1, Name = "ASP.NET" },
-            new() { Id = 2, Name = "Entity Framework" },
-            new() { Id = 3, Name = "C#" }
-        };
+            {
+                new() { Name = "ASP.NET" },
+                new() { Name = "Entity Framework" },
+                new() { Name = "C#" }
+            };
             context.Tags.AddRange(tags);
+            context.SaveChanges();
 
-            // Kullanıcı
+            // Şifre hashleme
+            var hasher = new PasswordHasher<User>();
             var user = new User
             {
-                Id = 1,
                 Username = "testuser",
-                Email = "test@example.com",
-                PasswordHash = "1234" 
+                Email = "test@example.com"
             };
+            user.PasswordHash = hasher.HashPassword(user, "1234"); 
+
             context.Users.Add(user);
+            context.SaveChanges();
 
             // Blog
             var blog = new Blog
             {
-                Id = 1,
                 Title = "İlk Blog",
                 Content = "Bu bir test blogudur.",
                 PublishDate = DateTime.Now,
-                UserId = 1,
-                CategoryId = 1
+                UserId = user.Id,
+                CategoryId = categories[0].Id
             };
             context.Blogs.Add(blog);
+            context.SaveChanges();
 
             // BlogTag
             context.BlogTags.AddRange(
-                new BlogTag { BlogId = 1, TagId = 1 },
-                new BlogTag { BlogId = 1, TagId = 2 }
+                new BlogTag { BlogId = blog.Id, TagId = tags[0].Id },
+                new BlogTag { BlogId = blog.Id, TagId = tags[1].Id }
             );
+            context.SaveChanges();
 
             // Yorum
             context.Comments.Add(new Comment
             {
-                Id = 1,
-                BlogId = 1,
-                UserId = 1,
+                BlogId = blog.Id,
+                UserId = user.Id,
                 Content = "Harika bir yazı!",
                 CreatedAt = DateTime.Now
             });
@@ -71,5 +76,6 @@ namespace DogusBlog
             context.SaveChanges();
         }
     }
+
 
 }

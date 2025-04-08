@@ -12,6 +12,12 @@ namespace DogusBlog.Repositories
             _context = context;
         }
 
+        public object GetByEmail(string email)
+        {
+            
+            return _context.Users.FirstOrDefault(u => u.Email == email);
+        }
+
         public async Task<User> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
