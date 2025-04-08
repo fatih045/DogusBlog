@@ -1,4 +1,6 @@
 using DogusBlog;
+using DogusBlog.Repositories;
+using DogusBlog.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +8,32 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+
+
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITagService, TagService>();
+
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("sql_connection")));
+
+builder.Services.AddAuthentication("MyCookieAuth")
+    .AddCookie("MyCookieAuth", options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+    });
+
 
 
 var app = builder.Build();
@@ -29,9 +55,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseRouting();
+
+
+app.UseAuthentication();
 
 app.UseAuthorization();
+app.UseRouting();
 
 app.MapStaticAssets();
 
