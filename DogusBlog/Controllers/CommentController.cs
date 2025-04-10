@@ -1,6 +1,7 @@
 ﻿using DogusBlog.Models;
 using DogusBlog.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogusBlog.Controllers
 {
@@ -30,6 +31,33 @@ namespace DogusBlog.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(int BlogId, string Content)
+        {
+            if (string.IsNullOrEmpty(Content))
+            {
+                return RedirectToAction("Details", "Blog", new { id = BlogId });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var comment = new Comment
+            {
+                BlogId = BlogId,
+                Content = Content,
+                CreatedAt = DateTime.Now,
+                UserId = int.Parse(userId)
+            };
+
+            await _commentService.AddAsync(comment);
+            return RedirectToAction("Details", "Blog", new { id = BlogId });
+        }
+
         // POST: /Comment/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -38,7 +66,7 @@ namespace DogusBlog.Controllers
             if (ModelState.IsValid)
             {
                 comment.CreatedAt = DateTime.Now;
-                // comment.UserId = CURRENT USER ID (login sisteminden sonra eklenecek)
+                // comment.UserId = CURRENT USER ID 
                 await _commentService.AddAsync(comment);
                 return RedirectToAction("Details", "Blog", new { id = comment.BlogId });
             }
@@ -80,6 +108,7 @@ namespace DogusBlog.Controllers
 
             return View(comment);
         }
+
 
         // POST: /Comment/DeleteConfirmed/5
         [HttpPost, ActionName("DeleteConfirmed")]

@@ -8,12 +8,12 @@
         public DateTime PublishDate { get; set; }
         public string? ImagePath { get; set; }
 
-        // İlişkili veriler için sadece gerekli bilgileri içerin
+        
         public string CategoryName { get; set; }
         public string UserName { get; set; }
 
 
-        // Tag'leri string listesi olarak alabiliriz
+       
         public List<string> Tags { get; set; } = new List<string>();
     }
 }

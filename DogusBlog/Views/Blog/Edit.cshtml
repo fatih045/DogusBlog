@@ -1,0 +1,204 @@
+﻿@model DogusBlog.Models.Dto.BlogEditDto
+@{
+    ViewData["Title"] = "Blog Düzenle";
+}
+<h2>Blog Düzenle</h2>
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CurrentImagePath" />
+
+    <div class="form-group mb-3">
+        <label asp-for="Title">Başlık</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="Content">İçerik</label>
+        <textarea asp-for="Content" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Image">Görsel (opsiyonel)</label>
+        @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
+        {
+            <div class="mb-2">
+                <img src="@Model.CurrentImagePath" alt="Mevcut görsel" style="max-width: 200px;" class="img-thumbnail" />
+                <div class="form-text">Yeni bir görsel yüklemediğiniz sürece mevcut görsel kullanılacaktır.</div>
+            </div>
+        }
+        <input asp-for="Image" type="file" class="form-control" />
+    </div>
+
+    <!-- Kategori Seçimi -->
+    <div class="form-group mb-3">
+        <label asp-for="CategoryId">Kategori</label>
+        <div class="input-group">
+            <select asp-for="CategoryId" id="categorySelect" class="form-control" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                <option value="">-- Seçiniz --</option>
+            </select>
+            <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newCategoryModal">
+                    + Yeni
+                </button>
+            </div>
+        </div>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <!-- Etiketler Seçimi -->
+    <div class="form-group mb-3">
+        <label>Etiketler</label>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Mevcut etiketler:</span>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newTagModal">
+                + Yeni Etiket Ekle
+            </button>
+        </div>
+        <div class="tag-container">
+            @foreach (var tag in Model.Tags)
+            {
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox"
+                           name="SelectedTagIds"
+                           value="@tag.Id"
+                           id="tag_@tag.Id"
+                    @(Model.SelectedTagIds.Contains(tag.Id) ? "checked" : "") />
+                    <label class="form-check-label" for="tag_@tag.Id">@tag.Name</label>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Güncelle</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">İptal</a>
+    </div>
+</form>
+
+<!-- Yeni Kategori Ekleme Modal -->
+<div class="modal fade" id="newCategoryModal" tabindex="-1" aria-labelledby="newCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newCategoryModalLabel">Yeni Kategori Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newCategoryName">Kategori Adı</label>
+                    <input type="text" class="form-control" id="newCategoryName" placeholder="Kategori adını giriniz">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" id="saveNewCategory">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yeni Etiket Ekleme Modal -->
+<div class="modal fade" id="newTagModal" tabindex="-1" aria-labelledby="newTagModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newTagModalLabel">Yeni Etiket Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newTagName">Etiket Adı</label>
+                    <input type="text" class="form-control" id="newTagName" placeholder="Etiket adını giriniz">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" id="saveNewTag">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            console.log("Document ready, initializing handlers");
+
+            // Yeni Kategori Kaydetme
+            $("#saveNewCategory").click(function () {
+                console.log("saveNewCategory clicked");
+                var categoryName = $("#newCategoryName").val();
+                if (categoryName) {
+                    $.ajax({
+                        url: '@Url.Action("CreateCategory", "Blog")',
+                        type: 'POST',
+                        data: { name: categoryName },
+                        success: function (result) {
+                            if (result.success) {
+                                
+                                $('#categorySelect').append(new Option(categoryName, result.id, true, true));
+                              
+                                var modal = bootstrap.Modal.getInstance(document.getElementById('newCategoryModal'));
+                                modal.hide();
+                               
+                                $("#newCategoryName").val('');
+                            } else {
+                                alert("Kategori eklenirken bir hata oluştu: " + result.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("AJAX Error:", error);
+                            alert("İşlem sırasında bir hata oluştu.");
+                        }
+                    });
+                } else {
+                    alert("Lütfen kategori adı giriniz.");
+                }
+            });
+
+            // Yeni Etiket Kaydetme
+            $("#saveNewTag").click(function () {
+                console.log("saveNewTag clicked");
+                var tagName = $("#newTagName").val();
+                if (tagName) {
+                    $.ajax({
+                        url: '@Url.Action("CreateTag", "Blog")',
+                        type: 'POST',
+                        data: { name: tagName },
+                        success: function (result) {
+                            if (result.success) {
+                               
+                                var newTag = `
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="SelectedTagIds"
+                                               value="${result.id}"
+                                               id="tag_${result.id}" checked />
+                                        <label class="form-check-label" for="tag_${result.id}">${tagName}</label>
+                                    </div>`;
+                                $('.tag-container').append(newTag);
+                                // Modal kapatılır
+                                var modal = bootstrap.Modal.getInstance(document.getElementById('newTagModal'));
+                                modal.hide();
+                                // Input temizlenir
+                                $("#newTagName").val('');
+                            } else {
+                                alert("Etiket eklenirken bir hata oluştu: " + result.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("AJAX Error:", error);
+                            alert("İşlem sırasında bir hata oluştu.");
+                        }
+                    });
+                } else {
+                    alert("Lütfen etiket adı giriniz.");
+                }
+            });
+        });
+    </script>
+}

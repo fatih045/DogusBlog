@@ -17,6 +17,12 @@ namespace DogusBlog.Repositories
             return await _context.Tags.ToListAsync();
         }
 
+        public async Task<Tag> GetByNameAsync(string name)
+        {
+            return await _context.Tags
+                .FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
+        }
+
         public async Task<Tag?> GetByIdAsync(int id)
         {
             return await _context.Tags.FindAsync(id);

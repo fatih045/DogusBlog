@@ -12,6 +12,12 @@ namespace DogusBlog.Repositories
             _context = context;
         }
 
+        public async Task<Category> GetByNameAsync(string name)
+        {
+            return await _context.Categories
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower());
+        }
+
         public async Task<Category> GetCategoryWithBlogsAsync(int categoryId)
         {
             return await _context.Categories

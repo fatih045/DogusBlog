@@ -12,6 +12,11 @@ namespace DogusBlog.Services
             _categoryRepository = categoryRepository;
         }
 
+        public async Task<Category> GetByNameAsync(string name)
+        {
+            return await _categoryRepository.GetByNameAsync(name);
+        }
+
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
             return await _categoryRepository.GetAllAsync();

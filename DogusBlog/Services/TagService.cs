@@ -17,5 +17,10 @@ namespace DogusBlog.Services
         public Task AddAsync(Tag tag) => _tagRepository.AddAsync(tag);
         public Task UpdateAsync(Tag tag) => _tagRepository.UpdateAsync(tag);
         public Task DeleteAsync(int id) => _tagRepository.DeleteAsync(id);
+        public async Task<Tag> GetByNameAsync(string name)
+        {
+            return await _tagRepository.GetByNameAsync(name);
+        }
+
     }
 }

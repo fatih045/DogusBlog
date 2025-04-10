@@ -1,4 +1,5 @@
 ﻿using DogusBlog.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DogusBlog.Repositories
 {
@@ -7,6 +8,11 @@ namespace DogusBlog.Repositories
         Task<IEnumerable<Blog>> GetAllWithCategoryAsync();
         Task<Blog> GetBlogWithDetailsAsync(int id);
         Task<IEnumerable<Blog>> GetByCategoryIdAsync(int categoryId);
+
+       
+        Task<IEnumerable<Blog>> GetBlogsByUserIdAsync(int userId);
+
+        DbContext GetDbContext();
 
 
     }

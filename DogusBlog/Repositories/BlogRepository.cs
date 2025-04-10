@@ -15,10 +15,16 @@ namespace DogusBlog.Repositories
         public override async Task<IEnumerable<Blog>> GetAllAsync()
         {
             return await _context.Blogs
-                .Include(b => b.Category) // Kategoriyi include et
-                .Include(b => b.User)     // Kullanıcıyı include et
+                .Include(b => b.Category) 
+                .Include(b => b.User)
+                 .Include(b => b.BlogTags)
+                        .ThenInclude(bt => bt.Tag)
                 .ToListAsync();
         }
+
+
+
+
 
         public async Task<IEnumerable<Blog>> GetAllWithCategoryAsync()
         {
@@ -34,6 +40,8 @@ namespace DogusBlog.Repositories
                 .Include(b => b.Category)
                 .Include(b => b.User)
                 .Include(b => b.Comments)
+                .Include(b => b.BlogTags)
+                        .ThenInclude(bt => bt.Tag)
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 
@@ -42,6 +50,23 @@ namespace DogusBlog.Repositories
             return await _context.Blogs
                 .Where(b => b.CategoryId == categoryId)
                 .ToListAsync();
+        }
+        public async Task<IEnumerable<Blog>> GetBlogsByUserIdAsync(int userId)
+        {
+            return await _context.Blogs
+                .Include(b => b.Category)
+                .Include(b => b.User)
+                .Include(b => b.BlogTags)
+                    .ThenInclude(bt => bt.Tag)
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.PublishDate)
+                .ToListAsync();
+        }
+
+        
+        public DbContext GetDbContext()
+        {
+            return _context;
         }
     }
 

@@ -1,6 +1,8 @@
 ﻿
 using DogusBlog.Models;
+using DogusBlog.Models.Dto;
 using DogusBlog.Repositories;
+using DogusBlog.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,56 +14,73 @@ namespace DogusBlog.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IPasswordHasher<User> _passwordHasher; // PasswordHasher dependency
+        private readonly IUserService  _userService;
+        private readonly IPasswordHasher<User> _passwordHasher; 
 
-        public AuthController(IUserRepository userRepository, IPasswordHasher<User> passwordHasher)
+        public AuthController(IUserService userService, IPasswordHasher<User> passwordHasher)
         {
-            _userRepository = userRepository;
+            _userService = userService;
             _passwordHasher = passwordHasher;
         }
 
         public IActionResult Register()
         {
-            return View();
+            return View(new RegisterViewModel());
         }
 
+    
         [HttpPost]
-        public async Task<IActionResult> Register(User model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            if (_userRepository.GetByEmail(model.Email) != null)
+          
+            var existingUser = await _userService.GetByEmailAsync(model.Email);
+            if (existingUser != null)
             {
                 ModelState.AddModelError("", "Bu email zaten kullanılıyor.");
                 return View(model);
             }
 
-            // Hash password using PasswordHasher
-            var passwordHash = _passwordHasher.HashPassword(model, model.PasswordHash);
-            model.PasswordHash = passwordHash;
+            
+            var user = new User
+            {
+                Username = model.Username,
+                Email = model.Email
+            };
 
-            await _userRepository.AddAsync(model);
+           
+            user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
+            await _userService.AddAsync(user);
             return RedirectToAction("Login");
         }
 
         public IActionResult Login()
         {
+
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View();
         }
+
+
+
 
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            var user = _userRepository.GetByEmail(email) as User;
+            var user = await _userService.GetByEmailAsync(email);
             if (user == null)
             {
                 ModelState.AddModelError("", "Geçersiz giriş bilgileri.");
                 return View();
             }
 
-            // Verify password using PasswordHasher
+            
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
             if (result == PasswordVerificationResult.Failed)
             {
@@ -79,7 +98,7 @@ namespace DogusBlog.Controllers
             var identity = new ClaimsIdentity(claims, "MyCookieAuth");
             var principal = new ClaimsPrincipal(identity);
 
-            // Cookie-based Authentication
+           
             await HttpContext.SignInAsync("MyCookieAuth", principal);
 
             return RedirectToAction("Index", "Home");

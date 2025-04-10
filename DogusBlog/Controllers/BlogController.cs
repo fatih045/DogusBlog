@@ -3,6 +3,7 @@ using DogusBlog.Models.Dto;
 using DogusBlog.Models.Dto.DogusBlog.Models.Dto;
 using DogusBlog.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogusBlog.Controllers
 {
@@ -10,11 +11,13 @@ namespace DogusBlog.Controllers
     {
         private readonly IBlogService _blogService;
         private readonly ICategoryService _categoryService;
+        private readonly ITagService _tagService;
 
-        public BlogController(IBlogService blogService, ICategoryService categoryService)
+        public BlogController(IBlogService blogService, ICategoryService categoryService,ITagService tagService)
         {
             _blogService = blogService;
             _categoryService = categoryService;
+            _tagService = tagService;
         }
 
         // GET: /Blog
@@ -46,6 +49,7 @@ namespace DogusBlog.Controllers
 
             var dto = new BlogDetailDto
             {
+                Id = blog.Id,
                 Title = blog.Title,
                 Content = blog.Content,
                 PublishDate = blog.PublishDate,
@@ -53,7 +57,7 @@ namespace DogusBlog.Controllers
                 UserName = blog.User?.Username ?? "Anonim",
                 Comments = blog.Comments?.Select(c => new CommentDto
                 {
-                    Id = c.Id,  // Id'yi ekledik
+                    Id = c.Id,  
                     Content = c.Content,
                     CreatedAt = c.CreatedAt,
                     UserName = c.User?.Username ?? "Anonim"
@@ -65,54 +69,185 @@ namespace DogusBlog.Controllers
 
 
 
-        // GET: /Blog/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = await _categoryService.GetAllAsync();
-            return View();
+            var dto = new BlogCreateDto
+            {
+                Categories = (await _categoryService.GetAllAsync()).ToList(),
+                Tags = (await _tagService.GetAllAsync()).ToList()
+            };
+
+            return View(dto);
         }
 
-        // POST: /Blog/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Blog blog)
+        public async Task<IActionResult> Create(BlogCreateDto dto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                blog.PublishDate = DateTime.Now;
-                // blog.UserId = CURRENT USER ID → sonra ekleyeceğiz
-                await _blogService.AddAsync(blog);
-                return RedirectToAction(nameof(Index));
+                dto.Categories = (await _categoryService.GetAllAsync()).ToList();
+                dto.Tags = (await _tagService.GetAllAsync()).ToList();
+                return View(dto);
             }
 
-            ViewBag.Categories = await _categoryService.GetAllAsync();
-            return View(blog);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var blog = new Blog
+            {
+                Title = dto.Title,
+                Content = dto.Content,
+                PublishDate = DateTime.Now,
+                CategoryId = dto.CategoryId,
+                UserId = int.Parse(userIdClaim.Value),
+                BlogTags = dto.SelectedTagIds.Select(tagId => new BlogTag
+                {
+                    TagId = tagId
+                }).ToList()
+            };
+
+          
+
+            await _blogService.AddAsync(blog);
+
+            return RedirectToAction("Index","Home");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCategory(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Json(new { success = false, message = "Kategori adı boş olamaz." });
+            }
+
+            try
+            {
+               
+                var existingCategory = await _categoryService.GetByNameAsync(name);
+                if (existingCategory != null)
+                {
+                    return Json(new { success = false, message = "Bu kategori zaten mevcut." });
+                }
+
+                
+                var category = new Category { Name = name };
+                await _categoryService.AddAsync(category);
+
+                return Json(new { success = true, id = category.Id, name = category.Name });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateTag(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Json(new { success = false, message = "Etiket adı boş olamaz." });
+            }
+
+            try
+            {
+               
+                var existingTag = await _tagService.GetByNameAsync(name);
+                if (existingTag != null)
+                {
+                    return Json(new { success = false, message = "Bu etiket zaten mevcut." });
+                }
+
+                
+                var tag = new Tag { Name = name };
+                await _tagService.AddAsync(tag);
+
+                return Json(new { success = true, id = tag.Id, name = tag.Name });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // GET: /Blog/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            var blog = await _blogService.GetByIdAsync(id);
+            var blog = await _blogService.GetBlogWithDetailsAsync(id);
             if (blog == null)
                 return NotFound();
 
-            ViewBag.Categories = await _categoryService.GetAllAsync();
-            return View(blog);
-        }
-
-        // POST: /Blog/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Blog blog)
-        {
-            if (ModelState.IsValid)
+           
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || blog.UserId != int.Parse(userIdClaim.Value))
             {
-                await _blogService.UpdateAsync(blog);
-                return RedirectToAction(nameof(Index));
+                return Unauthorized();
             }
 
-            ViewBag.Categories = await _categoryService.GetAllAsync();
-            return View(blog);
+           
+            var editDto = new BlogEditDto
+            {
+                Id = blog.Id,
+                Title = blog.Title,
+                Content = blog.Content,
+                CategoryId = blog.CategoryId,
+                CurrentImagePath = blog.ImagePath,
+                Categories = (await _categoryService.GetAllAsync()).ToList(),
+                Tags = (await _tagService.GetAllAsync()).ToList(),
+                SelectedTagIds = blog.BlogTags?.Select(bt => bt.TagId).ToList() ?? new List<int>()
+            };
+
+            return View(editDto);
+        }
+
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(BlogEditDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                dto.Categories = (await _categoryService.GetAllAsync()).ToList();
+                dto.Tags = (await _tagService.GetAllAsync()).ToList();
+                return View(dto);
+            }
+
+            var blog = await _blogService.GetByIdAsync(dto.Id);
+            if (blog == null)
+                return NotFound();
+
+            
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || blog.UserId != int.Parse(userIdClaim.Value))
+            {
+                return Unauthorized();
+            }
+
+            // Blog verilerini güncelle (Etiketler hariç)
+            blog.Title = dto.Title;
+            blog.Content = dto.Content;
+            blog.CategoryId = dto.CategoryId;
+
+            
+            if (dto.Image != null && dto.Image.Length > 0)
+            {
+                // Resim işleme kodları buraya
+            }
+
+            // Önce blog bilgilerini güncelle
+            await _blogService.UpdateAsync(blog);
+
+           
+            await _blogService.UpdateBlogTagsAsync(blog.Id, dto.SelectedTagIds);
+
+            return RedirectToAction("Details", new { id = blog.Id });
         }
 
         // GET: /Blog/Delete/5
@@ -125,13 +260,34 @@ namespace DogusBlog.Controllers
             return View(blog);
         }
 
-        // POST: /Blog/DeleteConfirmed/5
-        [HttpPost, ActionName("DeleteConfirmed")]
+        // AJAX ile blog silme
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteBlog(int id)
         {
-            await _blogService.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                var blog = await _blogService.GetByIdAsync(id);
+
+                
+                if (blog == null)
+                    return NotFound();
+
+              
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || blog.UserId != int.Parse(userIdClaim.Value))
+                {
+                    return Unauthorized();
+                }
+
+                
+                await _blogService.DeleteAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
     }
 }

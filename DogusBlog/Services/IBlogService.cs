@@ -12,6 +12,13 @@ namespace DogusBlog.Services
         Task AddAsync(Blog blog);
         Task UpdateAsync(Blog blog);
         Task DeleteAsync(int id);
+
+
+        Task<IEnumerable<Blog>> GetBlogsByUserIdAsync(int userId);
+
+        Task ClearBlogTagsAsync(int blogId);
+
+        Task UpdateBlogTagsAsync(int blogId, List<int> tagIds);
     }
 
 }

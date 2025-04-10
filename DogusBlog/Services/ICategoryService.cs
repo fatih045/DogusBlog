@@ -10,6 +10,7 @@ namespace DogusBlog.Services
         Task AddAsync(Category category);
         Task UpdateAsync(Category category);
         Task DeleteAsync(int id);
+        Task<Category> GetByNameAsync(string name);
     }
 
 }
