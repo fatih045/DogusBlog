@@ -55,6 +55,7 @@ namespace DogusBlog.Controllers
                 PublishDate = blog.PublishDate,
                 CategoryName = blog.Category?.Name ?? "Kategorisiz",
                 UserName = blog.User?.Username ?? "Anonim",
+                ImagePath = blog.ImagePath,
                 Comments = blog.Comments?.Select(c => new CommentDto
                 {
                     Id = c.Id,  
@@ -110,11 +111,31 @@ namespace DogusBlog.Controllers
                 }).ToList()
             };
 
-          
+            // Resim yükleme işlemini ekleyelim
+            if (dto.Image != null && dto.Image.Length > 0)
+            {
+                // Uploads klasörü yoksa oluştur
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "blogs");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Benzersiz bir dosya adı oluştur
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.Image.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Dosyayı fiziksel olarak kaydet
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(fileStream);
+                }
+
+                // Veritabanına kaydedilecek yolu ata
+                blog.ImagePath = "/uploads/blogs/" + uniqueFileName;
+            }
 
             await _blogService.AddAsync(blog);
 
-            return RedirectToAction("Index","Home");
+            return RedirectToAction("Index", "Home");
         }
 
 
@@ -207,7 +228,7 @@ namespace DogusBlog.Controllers
             return View(editDto);
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(BlogEditDto dto)
@@ -223,7 +244,6 @@ namespace DogusBlog.Controllers
             if (blog == null)
                 return NotFound();
 
-            
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || blog.UserId != int.Parse(userIdClaim.Value))
             {
@@ -235,16 +255,41 @@ namespace DogusBlog.Controllers
             blog.Content = dto.Content;
             blog.CategoryId = dto.CategoryId;
 
-            
             if (dto.Image != null && dto.Image.Length > 0)
             {
-                // Resim işleme kodları buraya
+                // Eski resmi sil (eğer varsa)
+                if (!string.IsNullOrEmpty(blog.ImagePath))
+                {
+                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", blog.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldImagePath))
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
+                }
+
+                // Yeni resmi kaydet
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "blogs");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Benzersiz bir dosya adı oluştur
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.Image.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Dosyayı fiziksel olarak kaydet
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(fileStream);
+                }
+
+                // Veritabanına kaydedilecek yolu ata
+                blog.ImagePath = "/uploads/blogs/" + uniqueFileName;
             }
 
             // Önce blog bilgilerini güncelle
             await _blogService.UpdateAsync(blog);
 
-           
+            // Etiketleri güncelle
             await _blogService.UpdateBlogTagsAsync(blog.Id, dto.SelectedTagIds);
 
             return RedirectToAction("Details", new { id = blog.Id });

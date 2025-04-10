@@ -1,21 +1,28 @@
 ﻿
-@model DogusBlog.Models.Dto.BlogDetailDto
+
+            @model DogusBlog.Models.Dto.BlogDetailDto
 @{
     ViewData["Title"] = "Blog Detayı";
 }
-
 <div class="container mt-4">
     <h2>@Model.Title</h2>
     <p class="text-muted">Yayınlanma Tarihi: @Model.PublishDate.ToString("dd MMM yyyy")</p>
     <p>Kategori: <strong>@Model.CategoryName</strong></p>
     <p>Yazar: <strong>@Model.UserName</strong></p>
+
+   
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <div class="text-center mb-4">
+            <img src="@Model.ImagePath" class="img-fluid rounded" alt="@Model.Title" style="max-height: 400px;">
+        </div>
+    }
+
     <hr />
     <p>@Model.Content</p>
 </div>
-
 <div class="container mt-5">
     <h4>Yorumlar</h4>
-
     @if (Model.Comments == null || !Model.Comments.Any())
     {
         <p>Henüz yorum yapılmamış.</p>
@@ -35,9 +42,7 @@
         </ul>
     }
 </div>
-
 <hr class="container mt-4" />
-
 <div class="container mt-3">
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {

@@ -1,5 +1,5 @@
 ﻿
-
+@* 
 @{
     ViewData["Title"] = "Ana Sayfa";
 }
@@ -53,7 +53,68 @@
                 </div>
             }
         </div>
-
+ *@
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+@model IEnumerable<DogusBlog.Models.Dto.BlogDto>
+<div class="row">
+    <!-- Sol tarafta bloglar -->
+    <div class="col-md-9">
+        <h2 class="mb-4">Tüm Bloglar</h2>
+        @if (Model == null || !Model.Any())
+        {
+            <p>No blogs available.</p>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @foreach (var blog in Model)
+                {
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <!-- Burada resim ekliyoruz -->
+                            @if (!string.IsNullOrEmpty(blog.ImagePath))
+                            {
+                                <img src="@blog.ImagePath" class="card-img-top" alt="@blog.Title" style="height: 150px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light text-center py-4" style="height: 150px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted small">Resim Yok</p>
+                                </div>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@blog.Title</h5>
+                                <p class="card-text text-muted small">
+                                    Yayın Tarihi: @blog.PublishDate.ToString("dd MMM yyyy")
+                                </p>
+                                <p class="card-text">
+                                    @(blog.Content.Length > 100 ? blog.Content.Substring(0, 100) + "..." : blog.Content)
+                                </p>
+                                <a href="@Url.Action("Details", "Blog", new { id = blog.Id })" class="btn btn-primary btn-sm">Detay</a>
+                            </div>
+                            <div class="card-footer text-muted small">
+                                Kategori: @blog.CategoryName <br />
+                                Yazar: @blog.UserName <br />
+                                @if (blog.Tags.Any())
+                                {
+                                    <span>
+                                        Etiketler:
+                                        @foreach (var tag in blog.Tags)
+                                        {
+                                            <span class="badge bg-secondary me-1">@tag</span>
+                                        }
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
        
         <!-- Sağ tarafta filtreleme alanı -->
         <div class="col-md-3">

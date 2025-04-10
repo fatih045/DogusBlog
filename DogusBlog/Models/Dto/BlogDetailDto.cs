@@ -11,6 +11,8 @@ namespace DogusBlog.Models.Dto
         public string CategoryName { get; set; }
         public string UserName { get; set; }
         public List<CommentDto> Comments { get; set; }
+
+        public string? ImagePath { get; set; }
     }
 
 }
