@@ -1,0 +1,38 @@
+﻿@model DogusBlog.Models.Comment
+@{
+    ViewData["Title"] = "Yorumu Düzenle";
+}
+
+<div class="container mt-4">
+    <h2>Yorumu Düzenle</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="BlogId" />
+                <input type="hidden" asp-for="UserId" />
+                <input type="hidden" asp-for="CreatedAt" />
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label">Yorum</label>
+                    <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <a href="@(string.IsNullOrEmpty(ViewBag.ReturnUrl) ? Url.Action("Details", "Blog", new { id = Model.BlogId }) : ViewBag.ReturnUrl)" class="btn btn-secondary">İptal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

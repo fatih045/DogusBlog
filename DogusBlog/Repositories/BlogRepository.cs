@@ -40,6 +40,7 @@ namespace DogusBlog.Repositories
                 .Include(b => b.Category)
                 .Include(b => b.User)
                 .Include(b => b.Comments)
+                         .ThenInclude(c => c.User)
                 .Include(b => b.BlogTags)
                         .ThenInclude(bt => bt.Tag)
                 .FirstOrDefaultAsync(b => b.Id == id);

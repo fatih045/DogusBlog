@@ -1,59 +1,5 @@
 ﻿
-@* 
-@{
-    ViewData["Title"] = "Ana Sayfa";
-}
-@model IEnumerable<DogusBlog.Models.Dto.BlogDto>
 
-
-
-    <div class="row">
-        <!-- Sol tarafta bloglar -->
-        <div class="col-md-9">
-            <h2 class="mb-4">Tüm Bloglar</h2>
-
-            @if (Model == null || !Model.Any())
-            {
-                <p>No blogs available.</p>
-            }
-            else
-            {
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    @foreach (var blog in Model)
-                    {
-                        <div class="col">
-                            <div class="card h-100 shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">@blog.Title</h5>
-                                    <p class="card-text text-muted small">
-                                        Yayın Tarihi: @blog.PublishDate.ToString("dd MMM yyyy")
-                                    </p>
-                                    <p class="card-text">
-                                        @(blog.Content.Length > 100 ? blog.Content.Substring(0, 100) + "..." : blog.Content)
-                                    </p>
-                                    <a href="@Url.Action("Details", "Blog", new { id = blog.Id })" class="btn btn-primary btn-sm">Detay</a>
-                                </div>
-                                <div class="card-footer text-muted small">
-                                    Kategori: @blog.CategoryName <br />
-                                    Yazar: @blog.UserName <br />
-                                    @if (blog.Tags.Any())
-                                    {
-                                        <span>
-                                            Etiketler:
-                                            @foreach (var tag in blog.Tags)
-                                            {
-                                                <span class="badge bg-secondary me-1">@tag</span>
-                                            }
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
- *@
 @{
     ViewData["Title"] = "Ana Sayfa";
 }
@@ -115,44 +61,52 @@
             </div>
         }
     </div>
-       
-        <!-- Sağ tarafta filtreleme alanı -->
-        <div class="col-md-3">
-            <!-- Yeni Blog butonu -->
-            <div class="mb-4">
+
+    <!-- Sağ tarafta filtreleme alanı -->
+    <div class="col-md-3">
+        <!-- Yeni Blog butonu - Giriş yapmayan kullanıcıları login sayfasına yönlendirir -->
+        <div class="mb-4">
+            @if (User.Identity.IsAuthenticated)
+            {
                 <a href="@Url.Action("Create", "Blog")" class="btn btn-success w-100">
                     <i class="bi bi-plus-circle"></i> Yeni Blog Oluştur
                 </a>
-            </div>
+            }
+            else
+            {
+                <a href="@Url.Action("Login", "Auth", new { returnUrl = Url.Action("Create", "Blog") })" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle"></i> Yeni Blog Oluştur
+                </a>
+            }
+        </div>
 
-           
         @if (User.Identity.IsAuthenticated && ViewBag.UserBlogs != null)
         {
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Bloglarım</h5>
                 </div>
-                <ul class="list-group list-group-flush">
+                <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                     @foreach (var blog in ViewBag.UserBlogs as List<DogusBlog.Models.Dto.BlogDto>)
                     {
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-truncate" style="max-width: 60%;">@blog.Title</span>
-                                <div class="btn-group btn-group-sm">
+                        <div class="list-group-item">
+                            <div class="d-flex flex-column">
+                                <span class="text-truncate mb-2" style="max-width: 100%;">@blog.Title</span>
+                                <div class="btn-group" style="width: 100%;">
                                     <a href="@Url.Action("Details", "Blog", new { id = blog.Id })" class="btn btn-outline-primary" title="Detay">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="bi bi-eye"></i> Detay
                                     </a>
                                     <a href="@Url.Action("Edit", "Blog", new { id = blog.Id })" class="btn btn-outline-warning" title="Düzenle">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil"></i> Düzenle
                                     </a>
                                     <button onclick="confirmDelete(@blog.Id, '@blog.Title')" class="btn btn-outline-danger" title="Sil">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash"></i> Sil
                                     </button>
                                 </div>
                             </div>
-                        </li>
+                        </div>
                     }
-                </ul>
+                </div>
             </div>
 
             <!-- Silme işlemi için JavaScript -->
@@ -185,36 +139,34 @@
             </script>
         }
 
-            <!-- Kategoriler -->
-            <h5>Kategoriler</h5>
-            <ul class="list-group mb-4">
-                @foreach (var category in ViewBag.Categories as List<DogusBlog.Models.Category>)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="@Url.Action("Index", "Home", new { categoryId = category.Id })">@category.Name</a>
-                        @if (ViewBag.SelectedCategory == category.Id)
-                        {
-                            <span class="badge bg-primary">✔</span>
-                        }
-                    </li>
-                }
-            </ul>
-
-            <!-- Etiketler -->
-            <h5>Etiketler</h5>
-            <ul class="list-group">
-                @foreach (var tag in ViewBag.Tags as List<DogusBlog.Models.Tag>)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="@Url.Action("Index", "Home", new { tagName = tag.Name })">@tag.Name</a>
-                        @if (ViewBag.SelectedTag == tag.Name)
-                        {
-                            <span class="badge bg-primary">✔</span>
-                        }
-                    </li>
-                }
-            </ul>
+        <!-- Kategoriler -->
+        <h5>Kategoriler</h5>
+        <div class="list-group mb-4" style="max-height: 250px; overflow-y: auto;">
+            @foreach (var category in ViewBag.Categories as List<DogusBlog.Models.Category>)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("Index", "Home", new { categoryId = category.Id })">@category.Name</a>
+                    @if (ViewBag.SelectedCategory == category.Id)
+                    {
+                        <span class="badge bg-primary">✔</span>
+                    }
+                </div>
+            }
         </div>
 
+        <!-- Etiketler -->
+        <h5>Etiketler</h5>
+        <div class="list-group" style="max-height: 250px; overflow-y: auto;">
+            @foreach (var tag in ViewBag.Tags as List<DogusBlog.Models.Tag>)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("Index", "Home", new { tagName = tag.Name })">@tag.Name</a>
+                    @if (ViewBag.SelectedTag == tag.Name)
+                    {
+                        <span class="badge bg-primary">✔</span>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>

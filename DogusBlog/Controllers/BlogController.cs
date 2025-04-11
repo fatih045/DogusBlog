@@ -61,7 +61,8 @@ namespace DogusBlog.Controllers
                     Id = c.Id,  
                     Content = c.Content,
                     CreatedAt = c.CreatedAt,
-                    UserName = c.User?.Username ?? "Anonim"
+                    UserName = c.User?.Username ?? "Anonim",
+                    UserId = c.UserId
                 }).ToList() ?? new List<CommentDto>()
             };
 

@@ -1,5 +1,7 @@
 ﻿
 
+
+
             @model DogusBlog.Models.Dto.BlogDetailDto
 @{
     ViewData["Title"] = "Blog Detayı";
@@ -10,14 +12,12 @@
     <p>Kategori: <strong>@Model.CategoryName</strong></p>
     <p>Yazar: <strong>@Model.UserName</strong></p>
 
-   
     @if (!string.IsNullOrEmpty(Model.ImagePath))
     {
         <div class="text-center mb-4">
             <img src="@Model.ImagePath" class="img-fluid rounded" alt="@Model.Title" style="max-height: 400px;">
         </div>
     }
-
     <hr />
     <p>@Model.Content</p>
 </div>
@@ -37,6 +37,36 @@
                     <small class="text-muted">
                         Yazan: @comment.UserName – @comment.CreatedAt.ToString("dd MMM yyyy HH:mm")
                     </small>
+
+                    @if (User.Identity.IsAuthenticated && comment.UserId == int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value))
+                    {
+                        <div class="mt-2">
+                        @*     <a href="@Url.Action("Edit", "Comment", new { id = comment.Id, returnUrl = Context.Request.Path })" class="btn btn-sm btn-outline-primary">Düzenle</a> *@
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal@(comment.Id)">Sil</button>
+
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal@(comment.Id)" tabindex="-1" aria-labelledby="deleteModalLabel@(comment.Id)" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel@(comment.Id)">Yorumu Sil</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Bu yorumu silmek istediğinizden emin misiniz?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                            <form asp-action="DeleteConfirmed" asp-controller="Comment" method="post">
+                                                <input type="hidden" name="id" value="@comment.Id" />
+                                                <button type="submit" class="btn btn-danger">Sil</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </li>
             }
         </ul>
