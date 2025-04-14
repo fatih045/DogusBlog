@@ -82,11 +82,11 @@ Veritabanı tablolarına karşılık gelen Entity sınıfları:
 
 `SeedData.cs` içerisinde proje ilk çalıştırıldığında aşağıdaki veriler oluşturulur:
 
-- 3 Kategori: **Yazılım**, **Kitap**, **Film**  
-- 3 Etiket: **ASP.NET**, **Entity Framework**, **C#**  
-- 1 Kullanıcı  
-- 1 Blog  
-- 1 Yorum  
+- 9 Kategori: **Yazılım**, **Kitap**, **Film**   ....
+- 11 Etiket: **ASP.NET**, **Entity Framework**, **C#**  ....
+- 4 Kullanıcı  
+- 12 Blog  
+- 36 Yorum  
 - Blog ile Tag arasındaki ilişki: `BlogTags`
 
 > ⚠️ *Seed işlemleri sırasında Id gibi identity alanlara elle değer verildiği için dikkatli olunmalıdır*
@@ -97,6 +97,9 @@ Veritabanı tablolarına karşılık gelen Entity sınıfları:
 
 Bu proje, MVC yapısını, katmanlı mimariyi ve cookie tabanlı kimlik doğrulama sistemini örnekleyerek pratik yapma amacı taşımaktadır.  
 Modern projelerde ASP.NET Identity ve daha gelişmiş güvenlik mekanizmaları tercih edilmelidir.
+
+![image](https://github.com/user-attachments/assets/e0826b24-2bdf-4474-8947-b910e1912a5f)
+
 
 ---
 
