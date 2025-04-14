@@ -1,0 +1,40 @@
+﻿@model DogusBlog.Models.Dto.BlogDto
+
+<div class="card h-100 shadow-sm">
+    <!-- Burada resim ekliyoruz -->
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <img src="@Model.ImagePath" class="card-img-top" alt="@Model.Title" style="height: 150px; object-fit: cover;">
+    }
+    else
+    {
+        <div class="bg-light text-center py-4" style="height: 150px;">
+            <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+            <p class="text-muted small">Resim Yok</p>
+        </div>
+    }
+    <div class="card-body">
+        <h5 class="card-title">@Model.Title</h5>
+        <p class="card-text text-muted small">
+            Yayın Tarihi: @Model.PublishDate.ToString("dd MMM yyyy")
+        </p>
+        <p class="card-text">
+            @(Model.Content.Length > 100 ? Model.Content.Substring(0, 100) + "..." : Model.Content)
+        </p>
+        <a href="@Url.Action("Details", "Blog", new { id = Model.Id })" class="btn btn-primary btn-sm">Detay</a>
+    </div>
+    <div class="card-footer text-muted small">
+        Kategori: @Model.CategoryName <br />
+        Yazar: @Model.UserName <br />
+        @if (Model.Tags.Any())
+        {
+            <span>
+                Etiketler:
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="badge bg-secondary me-1">@tag</span>
+                }
+            </span>
+        }
+    </div>
+</div>
