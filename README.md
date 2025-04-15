@@ -11,7 +11,7 @@ Kullanıcılar blog yazabilir, bloglara yorum yapabilir ve etiketler/kategoriler
 
 - ASP.NET Core MVC  
 - Entity Framework Core (Code-First)  
-- SQL Server  
+- MsSQL  
 - Bootstrap (UI)  
 - Cookie Tabanlı Authentication  
 - Repository + Service Katmanı  
@@ -62,7 +62,8 @@ Veritabanı tablolarına karşılık gelen Entity sınıfları:
 ### 6. **Views (Razor)**
 - `/Views/Blog/Index.cshtml`, `Detail.cshtml`  
 - `/Views/Auth/Login.cshtml`, `Register.cshtml`  
-- `/Views/Shared/_Layout.cshtml` : Tüm sayfalarda ortak navbar, footer yapısı  
+- `/Views/Shared/_Layout.cshtml` : Tüm sayfalarda ortak navbar, footer yapısı
+- `/Views/Shared/_BlogCard.cshtml` : Partial Views 
 
 ---
 
@@ -70,11 +71,20 @@ Veritabanı tablolarına karşılık gelen Entity sınıfları:
 
 - Kullanıcılar `Register` işlemiyle kayıt olur  
 - Şifreler SHA256 algoritması ile hash'lenerek veritabanına kaydedilir  
-> ⚠️ *Güvenlik açısından SHA256 kullanımı önerilmez, yerine ASP.NET Identity tercih edilmelidir*
+
 
 - `Login` işlemi sırasında kullanıcı doğrulanır ve `Claims` oluşturularak `HttpContext.SignInAsync()` ile cookie yazılır  
 - `Logout` işlemi `HttpContext.SignOutAsync()` ile yapılır  
-- `"MyCookieAuth"` adıyla bir `AuthenticationScheme` tanımlıdır  
+- `"MyCookieAuth"` adıyla bir `AuthenticationScheme` tanımlıdır
+  ## 🧪 Test Kullanıcısı ile Giriş
+
+Projeyi test etmek için aşağıdaki kullanıcı bilgileri ile doğrudan giriş yapabilirsiniz:
+
+- **E-posta:** `testuser@example.com`  
+- **Şifre:** `1234`  
+
+✅ Bu kullanıcı, `SeedData.cs` dosyasında **zaten tanımlıdır**, ekstra bir işlem yapmanıza gerek yoktur.
+
 
 ---
 
@@ -89,7 +99,7 @@ Veritabanı tablolarına karşılık gelen Entity sınıfları:
 - 36 Yorum  
 - Blog ile Tag arasındaki ilişki: `BlogTags`
 
-> ⚠️ *Seed işlemleri sırasında Id gibi identity alanlara elle değer verildiği için dikkatli olunmalıdır*
+
 
 ---
 
