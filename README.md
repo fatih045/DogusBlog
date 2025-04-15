@@ -113,3 +113,31 @@ Modern projelerde ASP.NET Identity ve daha gelişmiş güvenlik mekanizmaları t
 
 ---
 
+
+
+## 🚀 Kurulum ve Çalıştırma
+
+### 1. Projeyi Klonla
+```bash
+git clone https://github.com/fatih045/DogusBlog.git
+cd DogusBlog
+
+Bağımlılıkları yükle
+
+dotnet restore
+
+Veritabanı Oluştur
+
+dotnet ef database update
+⚠️ dotnet ef komutu için dotnet-ef global tool kurulu olmalıdır.
+Gerekirse şu komutu çalıştırın:
+dotnet tool install --global dotnet-ef
+
+
+
+ Uygulamayı Çalıştır
+dotnet run
+
+
+
+
