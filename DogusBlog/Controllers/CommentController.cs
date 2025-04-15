@@ -160,23 +160,48 @@ namespace DogusBlog.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> AddComment(int BlogId, string Content)
+        //public async Task<IActionResult> AddComment(int BlogId, string Content)
+        //{
+        //    if (string.IsNullOrEmpty(Content))
+        //    {
+        //        return RedirectToAction("Details", "Blog", new { id = BlogId });
+        //    }
+
+        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //    if (userId == null)
+        //    {
+        //        return RedirectToAction("Login", "Auth");
+        //    }
+
+        //    var userIdInt = int.Parse(userId);
+
+
+        //    var comment = new Comment
+        //    {
+        //        BlogId = BlogId,
+        //        Content = Content,
+        //        CreatedAt = DateTime.Now,
+        //        UserId = userIdInt
+        //    };
+
+        //    await _commentService.AddAsync(comment);
+        //    return RedirectToAction("Details", "Blog", new { id = BlogId });
+        //}
+
+
+        public async Task<IActionResult> AddComment(int BlogId, string Content, string returnUrl = null)
         {
             if (string.IsNullOrEmpty(Content))
             {
                 return RedirectToAction("Details", "Blog", new { id = BlogId });
             }
-
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
             {
                 return RedirectToAction("Login", "Auth");
             }
-
             var userIdInt = int.Parse(userId);
 
-            // Kullanıcı bilgisi zaten veritabanında var, yoruma sadece UserId'yi atamamız yeterli
-            // User entity'si ile ilişkilendirme otomatik olarak yapılacak
             var comment = new Comment
             {
                 BlogId = BlogId,
@@ -184,8 +209,15 @@ namespace DogusBlog.Controllers
                 CreatedAt = DateTime.Now,
                 UserId = userIdInt
             };
-
             await _commentService.AddAsync(comment);
+
+            
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+           
             return RedirectToAction("Details", "Blog", new { id = BlogId });
         }
 
